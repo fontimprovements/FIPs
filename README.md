@@ -1,6 +1,6 @@
 # FIPs
 
-FIPs (Font Improvement Proposals) is a lightweight process, similar in spirit to BIPs in Bitcoin and NIPs in Nostr, where font tool developers gather to discuss and specify implementation ideas for font improvements.
+FIPs (Font Improvement Proposals) are a lightweight process, similar in spirit to BIPs in Bitcoin and NIPs in Nostr, where font tool developers gather to discuss and specify implementation ideas for font improvements.
 
 These proposals are intended for ideas that live outside any specific file format or compiler specification, so that other toolmakers can review and adopt them across the ecosystem.
 
