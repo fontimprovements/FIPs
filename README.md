@@ -17,7 +17,14 @@ Each proposal must be curated in a numbered folder such as:
 And must include:
 
 - an explicit `FIP001.md` file describing the proposal in all clarity and detail
-- a curated set of all-lowercase, newline-delimited keywords in `keywords.txt` for future discovery. Keywords should describe general concepts such as `kerning`, `components`, `outlines` etc.
+- a `fip.yaml` file carrying a mandatory `name` field (a human-readable title) and a mandatory `keywords` list of all-lowercase, single-word terms describing general concepts such as `kerning`, `components`, `outlines` etc. Example:
+
+  ```yaml
+  name: Corner Components
+  keywords:
+    - components
+    - outlines
+  ```
 
 Additionally, they may include
 

@@ -40,55 +40,76 @@ jobs:
           done <<< "${{ steps.changed-fips.outputs.folders }}"
           exit $ERROR
 
-      - name: Check keywords.txt file exists
+      - name: Install dependencies
+        run: pip install pyyaml --quiet
+
+      - name: Write fip.yaml validation script
+        run: |
+          cat > /tmp/validate_fip_yaml.py << 'PYEOF'
+import sys, yaml
+
+yaml_file = sys.argv[1]
+
+try:
+    with open(yaml_file) as f:
+        data = yaml.safe_load(f)
+except Exception as e:
+    print(f'::error file={yaml_file}::Failed to parse {yaml_file}: {e}')
+    sys.exit(1)
+
+if not isinstance(data, dict):
+    print(f'::error file={yaml_file}::fip.yaml must contain a mapping (key-value pairs)')
+    sys.exit(1)
+
+errors = False
+
+if 'name' not in data:
+    print(f'::error file={yaml_file}::Field "name" is required')
+    errors = True
+elif not isinstance(data['name'], str) or not data['name'].strip():
+    print(f'::error file={yaml_file}::Field "name" must be a non-empty string')
+    errors = True
+
+if 'keywords' not in data:
+    print(f'::error file={yaml_file}::Field "keywords" is required')
+    errors = True
+elif not isinstance(data['keywords'], list):
+    print(f'::error file={yaml_file}::Field "keywords" must be a list')
+    errors = True
+elif len(data['keywords']) == 0:
+    print(f'::error file={yaml_file}::"keywords" list must not be empty')
+    errors = True
+else:
+    for i, kw in enumerate(data['keywords'], start=1):
+        if not isinstance(kw, str):
+            print(f'::error file={yaml_file},line={i}::Keyword at position {i} must be a string')
+            errors = True
+        else:
+            if kw != kw.lower():
+                print(f'::error file={yaml_file},line={i}::Keyword "{kw}" must be all lowercase')
+                errors = True
+            if any(c in kw for c in (' ', '\t')):
+                print(f'::error file={yaml_file},line={i}::Keyword "{kw}" contains spaces or tabs')
+                errors = True
+
+sys.exit(1 if errors else 0)
+PYEOF
+
+      - name: Validate fip.yaml
         run: |
           ERROR=0
           while IFS= read -r folder; do
             [ -z "$folder" ] && continue
             folder="${folder%/}"
-            kw_file="${folder}/keywords.txt"
-            if [ ! -f "$kw_file" ]; then
-              echo "::error title=Missing keywords file::${kw_file} is required but does not exist"
+            yaml_file="${folder}/fip.yaml"
+
+            if [ ! -f "$yaml_file" ]; then
+              echo "::error title=Missing fip.yaml::${yaml_file} is required but does not exist"
               ERROR=1
-            else
-              echo "✓ ${kw_file} exists"
+              continue
             fi
-          done <<< "${{ steps.changed-fips.outputs.folders }}"
-          exit $ERROR
 
-      - name: Validate keywords.txt content
-        run: |
-          ERROR=0
-          while IFS= read -r folder; do
-            [ -z "$folder" ] && continue
-            folder="${folder%/}"
-            kw_file="${folder}/keywords.txt"
-            [ ! -f "$kw_file" ] && continue
-
-            line_num=0
-            while IFS= read -r line || [ -n "$line" ]; do
-              line_num=$((line_num + 1))
-
-              if [ -z "$line" ]; then
-                echo "::error file=${kw_file},line=${line_num},title=Empty keyword::keywords.txt must not contain empty lines"
-                ERROR=1
-                continue
-              fi
-
-              if [ "$line" != "$(echo "$line" | tr '[:upper:]' '[:lower:]')" ]; then
-                echo "::error file=${kw_file},line=${line_num},title=Uppercase keyword::Keyword '$line' must be all lowercase"
-                ERROR=1
-              fi
-
-              if echo "$line" | grep -qE '[\x20\x09]'; then
-                echo "::error file=${kw_file},line=${line_num},title=Whitespace in keyword::Keyword '$line' contains spaces or tabs — must be a single word"
-                ERROR=1
-              fi
-            done < "$kw_file"
-
-            if [ "$line_num" -eq 0 ]; then
-              echo "::error file=${kw_file},title=Empty keywords file::keywords.txt must not be empty"
-              ERROR=1
-            fi
+            echo "✓ ${yaml_file} exists"
+            python3 /tmp/validate_fip_yaml.py "$yaml_file" || ERROR=1
           done <<< "${{ steps.changed-fips.outputs.folders }}"
           exit $ERROR
