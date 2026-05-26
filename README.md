@@ -17,7 +17,7 @@ Each proposal must be curated in a numbered folder such as:
 And must include:
 
 - an explicit `FIP001.md` file describing the proposal in detail
-- a curated set of all-lowercase, newline-delimited keywords in `keywords.txt` for future discovery
+- a curated set of all-lowercase, newline-delimited keywords in `keywords.txt` for future discovery. Keywords should describe general concepts such as `kerning`, `components`, `outlines` etc.
 
 Additionally, they may include
 
