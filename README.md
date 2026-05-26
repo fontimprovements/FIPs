@@ -6,7 +6,7 @@ These proposals are intended for ideas that live outside any specific file forma
 
 Typically (but not limited to it), such implementations are defined in private keys in font source formats such as `lib["com.schiftgestalt.corner_components"]`, but they may also simply carry vendor-agnostic FIP keys such as `lib["fip001"]`.
 
-The community and toolmakers may decide at any point in time to incorporate a mature FIP into their own toolchain under permanent property name or different private lib keys.
+The community and toolmakers may decide at any point in time to incorporate a mature FIP into their own toolchain under permanent property names or different private lib keys.
 
 ## Proposal structure
 
@@ -16,7 +16,7 @@ Each proposal must be curated in a numbered folder such as:
 
 And must include:
 
-- an explicit `FIP001.md` file describing the proposal in detail
+- an explicit `FIP001.md` file describing the proposal in all clarity and detail
 - a curated set of all-lowercase, newline-delimited keywords in `keywords.txt` for future discovery. Keywords should describe general concepts such as `kerning`, `components`, `outlines` etc.
 
 Additionally, they may include
@@ -29,3 +29,7 @@ The FIP numbers bear no meaning other than chronological ordering. As soon as th
 ## Pull request policy
 
 All proposal pull requests must be opened as **Draft** and stay in draft state until the proposal is finalized.
+
+## License
+
+This repository is licensed under the **Unlicense**, a permissive license that even waives attribution such that proposals may be incorporated into tools without the overhead of attribution
