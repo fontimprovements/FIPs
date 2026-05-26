@@ -6,7 +6,7 @@ These proposals are intended for ideas that live outside any specific file forma
 
 ## Proposal structure
 
-Each proposal must be curated in a numerated folder such as:
+Each proposal must be curated in a numbered folder such as:
 
 - `FIP001/`
 
