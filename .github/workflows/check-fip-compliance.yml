@@ -1,0 +1,94 @@
+name: Check FIP Compliance
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited, ready_for_review]
+    paths:
+      - 'FIP*/**'
+
+jobs:
+  check-fip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed FIP folders
+        id: changed-fips
+        run: |
+          CHANGED=$(git diff --name-only --diff-filter=ACMR ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -oE '^FIP[0-9]+/' | sort -u || true)
+          echo "Changed FIP folders:"
+          echo "$CHANGED"
+          echo "folders<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Check FIP markdown file exists
+        run: |
+          ERROR=0
+          while IFS= read -r folder; do
+            [ -z "$folder" ] && continue
+            folder="${folder%/}"
+            fip_file="${folder}/${folder}.md"
+            if [ ! -f "$fip_file" ]; then
+              echo "::error title=Missing markdown file::${fip_file} is required but does not exist"
+              ERROR=1
+            else
+              echo "✓ ${fip_file} exists"
+            fi
+          done <<< "${{ steps.changed-fips.outputs.folders }}"
+          exit $ERROR
+
+      - name: Check keywords.txt file exists
+        run: |
+          ERROR=0
+          while IFS= read -r folder; do
+            [ -z "$folder" ] && continue
+            folder="${folder%/}"
+            kw_file="${folder}/keywords.txt"
+            if [ ! -f "$kw_file" ]; then
+              echo "::error title=Missing keywords file::${kw_file} is required but does not exist"
+              ERROR=1
+            else
+              echo "✓ ${kw_file} exists"
+            fi
+          done <<< "${{ steps.changed-fips.outputs.folders }}"
+          exit $ERROR
+
+      - name: Validate keywords.txt content
+        run: |
+          ERROR=0
+          while IFS= read -r folder; do
+            [ -z "$folder" ] && continue
+            folder="${folder%/}"
+            kw_file="${folder}/keywords.txt"
+            [ ! -f "$kw_file" ] && continue
+
+            line_num=0
+            while IFS= read -r line || [ -n "$line" ]; do
+              line_num=$((line_num + 1))
+
+              if [ -z "$line" ]; then
+                echo "::error file=${kw_file},line=${line_num},title=Empty keyword::keywords.txt must not contain empty lines"
+                ERROR=1
+                continue
+              fi
+
+              if [ "$line" != "$(echo "$line" | tr '[:upper:]' '[:lower:]')" ]; then
+                echo "::error file=${kw_file},line=${line_num},title=Uppercase keyword::Keyword '$line' must be all lowercase"
+                ERROR=1
+              fi
+
+              if echo "$line" | grep -qE '[\x20\x09]'; then
+                echo "::error file=${kw_file},line=${line_num},title=Whitespace in keyword::Keyword '$line' contains spaces or tabs — must be a single word"
+                ERROR=1
+              fi
+            done < "$kw_file"
+
+            if [ "$line_num" -eq 0 ]; then
+              echo "::error file=${kw_file},title=Empty keywords file::keywords.txt must not be empty"
+              ERROR=1
+            fi
+          done <<< "${{ steps.changed-fips.outputs.folders }}"
+          exit $ERROR
