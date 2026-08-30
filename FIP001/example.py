@@ -1,7 +1,7 @@
 """FIP001: flatten Odieresis, then sequential subtraction.
 
-Odieresis = O + dieresiscomb. dieresiscomb holds two punches, then two
-dot components.
+Odieresis = O plus two dotaccentcomb components. Each mark is a punch,
+then a dot.
 """
 
 from __future__ import annotations
@@ -31,10 +31,7 @@ class Glyph:
     shapes: list[Shape] = field(default_factory=list)
 
 
-OVERLAPS = {
-    ("O", "punch.left"),
-    ("O", "punch.right"),
-}
+OVERLAPS = {("O", "punch")}
 
 
 def _base_name(name: str) -> str:
@@ -80,20 +77,18 @@ def apply_boolean(paths: Sequence[Path]) -> list[Path]:
 def main() -> None:
     glyphs = {
         "O": Glyph("O", [Path("O")]),
-        "dot.left": Glyph("dot.left", [Path("dot.left")]),
-        "dot.right": Glyph("dot.right", [Path("dot.right")]),
-        "dieresiscomb": Glyph(
-            "dieresiscomb",
-            [
-                Path("punch.left", subtraction=True),
-                Path("punch.right", subtraction=True),
-                Component("dot.left"),
-                Component("dot.right"),
-            ],
+        "dot": Glyph("dot", [Path("dot")]),
+        "dotaccentcomb": Glyph(
+            "dotaccentcomb",
+            [Path("punch", subtraction=True), Component("dot")],
         ),
         "Odieresis": Glyph(
             "Odieresis",
-            [Component("O"), Component("dieresiscomb")],
+            [
+                Component("O"),
+                Component("dotaccentcomb"),
+                Component("dotaccentcomb"),
+            ],
         ),
     }
     glyph = glyphs["Odieresis"]
